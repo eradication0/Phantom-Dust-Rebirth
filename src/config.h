@@ -34,6 +34,7 @@ namespace pdnet
         bool voiceDebug = false;           // voice_debug=on: EOS voice logs at Info, the input devices EOS sees, and the mic level every 3 s (debug)
         int voiceTalkIcon = 36;             // voice_talk_icon=N: MNET sprite N after the name of each player whose mic is on (36 = the original game's megaphone); -1 = voice_talk_mark text after a talking player's name instead
         int voiceTalkIconX = 6;             // voice_talk_icon_x=: gap in pixels between the end of the name and the megaphone
+        bool multiEnvironment = false;    // multi_environment=on: an Environmental skill can be placed while another is on the field (test, see gamepatches.cpp)
         bool iconGallery = false;         // icon_gallery=on: the main menu's hint line shows the game's 37 inline icons (debug, see gamepatches.cpp)
         bool previewUnstick = true;       // preview_unstick=off: pdnet doesn't run the town's update itself when the game stops calling it (testing)
         int previewArea = 0;              // preview_area=1-8: the town area (st09_0N) loaded under the online skill preview (testing; 0: the game's default, 7)

@@ -6913,6 +6913,32 @@ namespace pdnet::gamepatches
         }
     }
 
+    namespace
+    {
+        // multi_environment=on (test, 2026-11-21): lets an Environmental skill be placed while another is on the field.
+        // The field's environments live in a manager at 0x14058bd30 with one entry per player (0x1c bytes from +0x10:
+        // position, skill id +0xc, order +0x10, end time +0x14, start +0x18). FUN_14017bcc0 places the caster's
+        // environment, but first asks FUN_14017c4c0 for the active one and, if there is one, returns "done" without
+        // placing (0x14017bd26: cmp eax,-1 / jne 0x14017bddd). This removes that jump. FUN_14017c4c0 still picks ONE active
+        // environment (the lowest order number still alive), and every effect asks only for that one (FUN_140150010 and
+        // the script commands at 0x140210b70 / 0x140210be0), so the effects don't stack: a later environment waits and
+        // takes over when the earlier one ends or is destroyed. Every player in a match needs the same setting.
+        void MultiEnvironment()
+        {
+            if (!GetConfig().multiEnvironment) return;
+            uint8_t* at = At(0x14017bd29);
+            static const uint8_t kJne[] = { 0x0F, 0x85, 0xAE, 0x00, 0x00, 0x00 }; // jne 0x14017bddd
+            if (memcmp(at, kJne, sizeof kJne) != 0)
+            {
+                Log(L"gamepatch: multi_environment: not applied (the game's code differs at 14017BD29)");
+                return;
+            }
+            bool ok = Write(at, { 0x66, 0x0F, 0x1F, 0x44, 0x00, 0x00 }); // 6-byte nop
+            Log(L"gamepatch: multi_environment: %s - an Environmental skill can be placed while another is on the field (effects don't stack; every player needs this)",
+                ok ? L"on" : L"FAILED (VirtualProtect)");
+        }
+    }
+
     void Apply()
     {
         static std::once_flag once;
@@ -6933,6 +6959,7 @@ namespace pdnet::gamepatches
             PartnerLock();
             TestArsenalChoices();
             SkillDataGuard();
+            MultiEnvironment();
             HowToPlay();
             SkillPreviewScene();
             if (NametagsOnBodies())
